@@ -11,6 +11,10 @@ import { CLUSTER_NAME } from '../lib/cluster-config';
 import { INSTANCE_TYPE } from '../lib/cluster-config';
 import { SSM_PREFIX } from '../../ssm-prefix';
 
+/**
+ * aws ssm get-parameters --names /aws/service/ecs/optimized-ami/amazon-linux-2/gpu/recommended
+ * https://ap-northeast-2.console.aws.amazon.com/systems-manager/parameters/aws/service/ecs/optimized-ami/amazon-linux-2/gpu/recommended/image_id/description?region=ap-northeast-2#
+ */
 export class EcsEc2ClusterStack extends Stack {
     constructor(scope: Construct, id: string, props?: StackProps) {
         super(scope, id, props);
@@ -28,8 +32,13 @@ export class EcsEc2ClusterStack extends Stack {
 
         const autoScalingGroup = cluster.addCapacity('ec2-instance', {
             instanceType: new ec2.InstanceType(INSTANCE_TYPE),
+            machineImage: ec2.MachineImage.fromSsmParameter(
+                '/aws/service/ecs/optimized-ami/amazon-linux-2/gpu/recommended/image_id',
+                { os: ec2.OperatingSystemType.LINUX }
+            ),
             minCapacity: 2,
             maxCapacity: 10,
+            groupMetrics: [autoscaling.GroupMetrics.all()],
             cooldown: Duration.seconds(10),
             vpcSubnets: privateSubnetsSelection,
             blockDevices: [
