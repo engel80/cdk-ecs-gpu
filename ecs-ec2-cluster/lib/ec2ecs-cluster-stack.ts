@@ -3,6 +3,7 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
 import { CfnLaunchConfiguration } from 'aws-cdk-lib/aws-autoscaling';
 import { Construct } from 'constructs';
 
@@ -30,10 +31,20 @@ export class EcsEc2ClusterStack extends Stack {
             minCapacity: 2,
             maxCapacity: 10,
             cooldown: Duration.seconds(10),
-            vpcSubnets: privateSubnetsSelection
+            vpcSubnets: privateSubnetsSelection,
+            blockDevices: [
+                {
+                    deviceName: '/dev/xvda',
+                    volume: autoscaling.BlockDeviceVolume.ebs(100, {
+                        deleteOnTermination: true,
+                        encrypted: true,
+                        volumeType: autoscaling.EbsDeviceVolumeType.GP3
+                    })
+                }
+            ]
         });
         autoScalingGroup.role.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'));
-        
+
         const capacityProvider = new ecs.AsgCapacityProvider(this, 'asg-capacityprovider', {
             capacityProviderName: `${cluster.clusterName}-AsgCapacityProvider`,
             autoScalingGroup
@@ -42,7 +53,7 @@ export class EcsEc2ClusterStack extends Stack {
 
         const cfnLaunchConfig = autoScalingGroup.node.findChild('LaunchConfig') as CfnLaunchConfiguration;
         const ecsEc2SgToken = Token.asAny(Fn.select(0, cfnLaunchConfig.securityGroups as Array<any>));
-        
+
         new CfnOutput(this, 'VPC', { value: vpc.vpcId });
         new CfnOutput(this, 'EC2 Security Group ID', { value: ecsEc2SgToken.toString() });
         new CfnOutput(this, 'Cluster', { value: cluster.clusterName });
