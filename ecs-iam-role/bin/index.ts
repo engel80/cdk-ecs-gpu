@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
 
-import { EcsGpuIamRoleStack } from '../lib/ecs-iam-role-stack';
+import { EcsGpuIamRoleStack } from '../lib/ecs-gpu-iam-role-stack';
 
 const app = new cdk.App();
 const env = {

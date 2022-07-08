@@ -84,7 +84,7 @@ cd ../iam-role
 cdk deploy 
 ```
 
-[iam-role/lib/ecs-iam-role-stack.ts](./iam-role/lib/ecs-iam-role-stack.ts)
+[iam-role/lib/ecs-gpu-iam-role-stack.ts](./iam-role/lib/ecs-gpu-iam-role-stack.ts)
 
 ### Step 4: ECS Service
 
@@ -191,7 +191,7 @@ Load average: 0.00 0.02 0.00 4/301 75
 │   │   └── index.ts
 │   ├── cdk.json
 │   └── lib
-│       └── ecs-iam-role-stack.ts
+│       └── ecs-gpu-iam-role-stack.ts
 ├── ecs-restapi-service
 │   ├── bin
 │   │   └── index.ts
