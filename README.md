@@ -3,7 +3,7 @@
 Table Of Contents
 
 1. Deploy VPC stack
-2. Deploy ECS cluster stack
+2. Deploy ECS GPU cluster stack
 3. Deploy IAM Role stack
 4. Deploy ECS Service stack
 5. Scaling Test
@@ -43,7 +43,7 @@ Use the [deploy-all.sh](./deploy-all.sh) file if you want to deploy all stacks w
 
 The VPC ID will be saved into the SSM Parameter Store to refer from other stacks.
 
-Parameter Name : `/cdk-ecs-ec2/vpc-id`
+Parameter Name : `/cdk-ecs-gpu-ec2/vpc-id`
 
 Use the `-c vpcId` context parameter to use the existing VPC.
 
@@ -54,7 +54,7 @@ cdk deploy
 
 [vpc/lib/vpc-stack.ts](./vpc/lib/vpc-stack.ts)
 
-### Step 2: ECS cluster
+### Step 2: ECS GPU cluster
 
 ```bash
 cd ../ecs-ec2-cluster
@@ -66,7 +66,7 @@ cdk deploy -c vpcId=<vpc-id>
 
 SSM parameter:
 
-* /cdk-ecs-ec2/vpc-id
+* /cdk-ecs-gpu-ec2/vpc-id
 
 Cluster Name: [ecs-ec2-cluster/lib/cluster-config.ts](./ecs-ec2-cluster/lib/cluster-config.ts)
 
@@ -95,11 +95,11 @@ cdk deploy
 
 SSM parameters:
 
-* /cdk-ecs-ec2/vpc-id
-* /cdk-ecs-ec2/cluster-capacityprovider-name
-* /cdk-ecs-ec2/cluster-securitygroup-id
-* /cdk-ecs-ec2/task-execution-role-arn
-* /cdk-ecs-ec2/default-task-role-arn
+* /cdk-ecs-gpu-ec2/vpc-id
+* /cdk-ecs-gpu-ec2/cluster-capacityprovider-name
+* /cdk-ecs-gpu-ec2/cluster-securitygroup-id
+* /cdk-ecs-gpu-ec2/task-execution-role-arn
+* /cdk-ecs-gpu-ec2/default-task-role-arn
 
 [ecs-restapi-service/lib/ecs-restapi-service-stack.ts](./ecs-restapi-service/lib/ecs-restapi-service-stack.ts)
 
@@ -112,9 +112,9 @@ If the ECS cluster was re-created, you HAVE to deploy after cdk.context.json fil
 ### Step 5: Scaling Test
 
 ```bash
-aws ecs update-service --cluster cdk-ecs-ec2-local --service restapi --desired-count 5
+aws ecs update-service --cluster gpu-ec2-local --service restapi --desired-count 5
 
-aws ecs update-service --cluster cdk-ecs-ec2-local --service restapi2 --desired-count 13
+aws ecs update-service --cluster gpu-ec2-local --service restapi2 --desired-count 13
 ```
 
 ### Step 6: Execute a command using ECS Exec
@@ -124,22 +124,22 @@ Install the Session Manager plugin for the AWS CLI:
 https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html#install-plugin-linux
 
 ```bash
-aws ecs list-tasks --cluster cdk-ecs-ec2-local --service-name restapi
+aws ecs list-tasks --cluster gpu-ec2-local --service-name restapi
 ```
 
 ```json
 {
     "taskArns": [
-        "arn:aws:ecs:us-east-1:123456789:task/cdk-ecs-ec2-local/0a244ff8b8654b3abaaed0880b2b78f1",
-        "arn:aws:ecs:us-east-1:123456789:task/cdk-ecs-ec2-local/ac3d5a4e7273460a80aa18264e4a8f5e"
+        "arn:aws:ecs:us-east-1:123456789:task/gpu-ec2-local/0a244ff8b8654b3abaaed0880b2b78f1",
+        "arn:aws:ecs:us-east-1:123456789:task/gpu-ec2-local/ac3d5a4e7273460a80aa18264e4a8f5e"
     ]
 }
 ```
 
 ```bash
-TASK_ID=$(aws ecs list-tasks --cluster cdk-ecs-ec2-local --service-name restapi | jq '.taskArns[0]' | cut -d '/' -f3 | cut -d '"' -f1)
+TASK_ID=$(aws ecs list-tasks --cluster gpu-ec2-local --service-name restapi | jq '.taskArns[0]' | cut -d '/' -f3 | cut -d '"' -f1)
 
-aws ecs execute-command --cluster cdk-ecs-ec2-local --task $TASK_ID --container restapi-container  --interactive --command "/bin/sh"
+aws ecs execute-command --cluster gpu-ec2-local --task $TASK_ID --container restapi-container  --interactive --command "/bin/sh"
 ```
 
 ```bash

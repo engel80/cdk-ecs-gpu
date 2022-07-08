@@ -47,9 +47,10 @@ export class EcsRestAPIServiceStack extends Stack {
         });
         const container = taskDefinition.addContainer('container-restapi', {
             containerName,
-            image: ecs.ContainerImage.fromAsset(path.join(__dirname, "../../", "app")),
+            // image: ecs.ContainerImage.fromAsset(path.join(__dirname, "../../", "app")),
             // or build with app/build.sh
             // image: ecs.ContainerImage.fromRegistry("<account-id>.dkr.ecr.<region>.amazonaws.com/sample-rest-api:latest"),
+            image: ecs.ContainerImage.fromRegistry("681747700094.dkr.ecr.ap-northeast-2.amazonaws.com/ecs-gpu-api:latest"),
             cpu: 1024,
             memoryReservationMiB: 1024
         });

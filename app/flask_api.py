@@ -74,4 +74,4 @@ def gputest():
     return f'Result: y = {a.item()} + {b.item()} x + {c.item()} x^2 + {d.item()} x^3'
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
+    app.run(host='0.0.0.0', port=8080)
