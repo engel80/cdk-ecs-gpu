@@ -36,7 +36,7 @@ Use the `cdk` command-line toolkit to interact with your project:
 | IAM roles                     | 1m      |
 | ECS Service and ALB           | 10m     |
 
-Docker image size: 3.2GB
+Docker image size: 3.1GB
 
 ## Steps
 
@@ -73,7 +73,7 @@ SSM parameter:
 
 Cluster Name: [ecs-ec2-cluster/lib/cluster-config.ts](./ecs-ec2-cluster/lib/cluster-config.ts)
 
-[ecs-ec2-cluster/lib/cluster-stack.ts](./ecs-ec2-cluster/lib/cluster-stack.ts)
+[ecs-ec2-cluster/lib/ec2ecs-cluster-stack.ts](./ecs-ec2-cluster/lib/ec2ecs-cluster-stack.ts)
 
 ### Step 3: IAM Role
 
@@ -87,7 +87,7 @@ cd ../iam-role
 cdk deploy 
 ```
 
-[iam-role/lib/ecs-gpu-iam-role-stack.ts](./iam-role/lib/ecs-gpu-iam-role-stack.ts)
+[ecs-iam-role/lib/ecs-gpu-iam-role-stack.ts](./ecs-iam-role/lib/ecs-gpu-iam-role-stack.ts)
 
 ### Step 4: ECS Service
 
@@ -108,7 +108,7 @@ SSM parameters:
 
 **IMPORTANT**
 
-If the ECS cluster was re-created, you HAVE to deploy after cdk.context.json files deletion with the below:
+If the ECS cluster was re-created, you HAVE to deploy `ecs-restapi-service` stack after cdk.context.json files deletion with the below because old SSM parameter values exist in `cdk.context.json`.
 
 `find . -name "cdk.context.json" -exec rm -f {} \;`
 
