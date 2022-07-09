@@ -114,8 +114,10 @@ If the ECS cluster was re-created, you HAVE to deploy `ecs-restapi-service` stac
 
 ### Step 5: Scaling Test
 
+It taks arround x minutes until attached to ALB.
+
 ```bash
-aws ecs update-service --cluster gpu-ec2-local --service gpu-restapi --desired-count 9
+aws ecs update-service --cluster gpu-ec2-local --service gpu-restapi --desired-count 3
 ```
 
 ### Step 6: GPU usage test
@@ -123,50 +125,22 @@ aws ecs update-service --cluster gpu-ec2-local --service gpu-restapi --desired-c
 ```bash
 TEST_URL=$(aws cloudformation describe-stacks --stack-name ecs-gpu-service-restapi-local --query "Stacks[0].Outputs[?OutputKey=='TestURL'].OutputValue" --output text)
 echo $TEST_URL
+sed -e "s|<url>|${TEST_URL}|g" gpu-api-bzt-template.yaml > gpu-api-bzt.yaml
+cat gpu-api-bzt.yaml
 ```
 
 ```bash
-sed -e "s|<url>|${TEST_URL}|g" gpu-api-bzt-template.yaml > gpu-api-bzt.yaml
 bzt gpu-api-bzt.yaml
 ```
 
-Check the GPU usage on EC2 with SSM:
-
-```bash
-watch nvidia-smi
-```
-
-```bash
-Sat Jul  9 03:41:01 2022
-+-----------------------------------------------------------------------------+
-| NVIDIA-SMI 470.57.02    Driver Version: 470.57.02    CUDA Version: 11.4     |
-|-------------------------------+----------------------+----------------------+
-| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
-| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
-|                               |                      |               MIG M. |
-|===============================+======================+======================|
-|   0  Tesla T4            Off  | 00000000:00:1E.0 Off |                    0 |
-| N/A   53C    P0    29W /  70W |   1040MiB / 15109MiB |     39%      Default |
-|                               |                      |                  N/A |
-+-------------------------------+----------------------+----------------------+
-
-+-----------------------------------------------------------------------------+
-| Processes:                                                                  |
-|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
-|        ID   ID                                                   Usage      |
-|=============================================================================|
-|    0   N/A  N/A     13118      C   ...user/miniconda/bin/python     1037MiB |
-+-----------------------------------------------------------------------------+
-```
-
-### Step 7: Execute a command using ECS Exec
+### Step 7: Execute the gpustat command using ECS Exec
 
 Install the Session Manager plugin for the AWS CLI:
 
 https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html#install-plugin-linux
 
 ```bash
-aws ecs list-tasks --cluster gpu-ec2-local --service-name restapi
+aws ecs list-tasks --cluster gpu-ec2-local --service-name gpu-restapi
 ```
 
 ```json
@@ -180,28 +154,16 @@ aws ecs list-tasks --cluster gpu-ec2-local --service-name restapi
 
 ```bash
 TASK_ID=$(aws ecs list-tasks --cluster gpu-ec2-local --service-name gpu-restapi | jq '.taskArns[0]' | cut -d '/' -f3 | cut -d '"' -f1)
-
-aws ecs execute-command --cluster gpu-ec2-local --task $TASK_ID --container restapi-container  --interactive --command "/bin/sh"
+aws ecs execute-command --cluster gpu-ec2-local --task $TASK_ID --container gpu-restapi-container  --interactive --command "/bin/sh"
 ```
+
+Connect to Task and run the `gpustat` command:
 
 ```bash
-The Session Manager plugin was installed successfully. Use the AWS CLI to start a session.
-
-Starting session with SessionId: ecs-execute-command-0dfcb1f8c2e47585a
-/app # top
-Mem: 1253428K used, 6610268K free, 540K shrd, 2088K buff, 827656K cached
-CPU:   0% usr   0% sys   0% nic 100% idle   0% io   0% irq   0% sirq
-Load average: 0.00 0.02 0.00 4/301 75
-  PID  PPID USER     STAT   VSZ %VSZ CPU %CPU COMMAND
-   22     8 root     S    1525m  19%   2   0% /ecs-execute-command-2daf7b7a-7ad7-457d-a33d-ca639508cfa7/ssm-agent-worker
-   57    22 root     S    1518m  19%   2   0% /ecs-execute-command-2daf7b7a-7ad7-457d-a33d-ca639508cfa7/ssm-session-worker ecs-execute-command-0dfcb1f8c2e47585a
-    8     0 root     S    1440m  18%   1   0% /ecs-execute-command-2daf7b7a-7ad7-457d-a33d-ca639508cfa7/amazon-ssm-agent
-   14     1 root     S    32632   0%   2   0% {gunicorn} /usr/local/bin/python /usr/local/bin/gunicorn flask_api:app --bind 0.0.0.0:8080
-    1     0 root     S    22976   0%   0   0% {gunicorn} /usr/local/bin/python /usr/local/bin/gunicorn flask_api:app --bind 0.0.0.0:8080
-   66    57 root     S     1676   0%   0   0% /bin/sh
-   74    66 root     R     1604   0%   1   0% top
-/app # exit
+gpustat
 ```
+
+![gpustat](./screenshots/gpustat.png?raw=true)
 
 ## Clean Up
 

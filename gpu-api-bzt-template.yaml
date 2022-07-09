@@ -1,11 +1,10 @@
 # bzt gpu-api-bzt.yaml
 ---
 execution:
-- concurrency: 2
-  ramp-up: 120s
+- concurrency: 3
+  ramp-up: 3s
   # ramp-up: 180s
-  hold-for: 30m
-  # hold-for: 30m
+  hold-for: 10m
   scenario: gpu-api
 
 scenarios:

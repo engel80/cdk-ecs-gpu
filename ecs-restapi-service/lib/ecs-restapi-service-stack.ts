@@ -51,9 +51,9 @@ export class EcsRestAPIServiceStack extends Stack {
             // image: ecs.ContainerImage.fromAsset(path.join(__dirname, "../../", "cpu-api")),
             // image: ecs.ContainerImage.fromAsset(path.join(__dirname, "../../", "gpu-api")),
             // or build with gpu-api/build.sh
-            image: ecs.ContainerImage.fromRegistry(`${props?.env?.account}.dkr.ecr.${props?.env?.region}.amazonaws.com/ecs-gpu-api:latest`),
+            image: ecs.ContainerImage.fromRegistry(`${props?.env?.account}.dkr.ecr.${props?.env?.region}.amazonaws.com/gpu-api:latest`),
             gpuCount: 1,
-            // cpu: 1024,
+            cpu: 2048,
             memoryReservationMiB: 2048
         });
         container.addPortMappings({ containerPort: applicationPort, hostPort: 0 });
@@ -131,6 +131,6 @@ export class EcsRestAPIServiceStack extends Stack {
         new CfnOutput(this, 'TaskDefinition', { value: taskDefinition.family });
         new CfnOutput(this, 'LogGroup', { value: logGroup.logGroupName });
         new CfnOutput(this, 'ALB', { value: alb.loadBalancerDnsName });
-        new CfnOutput(this, 'TestURL', { value: `https://${alb.loadBalancerDnsName}/gputest` });
+        new CfnOutput(this, 'TestURL', { value: `http://${alb.loadBalancerDnsName}/gputest` });
     }
 }
