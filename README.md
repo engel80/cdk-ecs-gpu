@@ -157,7 +157,7 @@ TASK_ID=$(aws ecs list-tasks --cluster gpu-ec2-local --service-name gpu-restapi 
 aws ecs execute-command --cluster gpu-ec2-local --task $TASK_ID --container gpu-restapi-container  --interactive --command "/bin/sh"
 ```
 
-Connect to Task and run the `gpustat` command:
+Connect to an ECS Task and run the `gpustat` command:
 
 ```bash
 gpustat
