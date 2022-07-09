@@ -123,6 +123,7 @@ aws ecs update-service --cluster gpu-ec2-local --service gpu-restapi --desired-c
 ### Step 6: GPU usage test
 
 ```bash
+cd test
 TEST_URL=$(aws cloudformation describe-stacks --stack-name ecs-gpu-service-restapi-local --query "Stacks[0].Outputs[?OutputKey=='TestURL'].OutputValue" --output text)
 echo $TEST_URL
 sed -e "s|<url>|${TEST_URL}|g" gpu-api-bzt-template.yaml > gpu-api-bzt.yaml

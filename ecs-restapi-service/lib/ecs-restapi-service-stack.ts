@@ -52,7 +52,7 @@ export class EcsRestAPIServiceStack extends Stack {
             // image: ecs.ContainerImage.fromAsset(path.join(__dirname, "../../", "gpu-api")),
             // or build with gpu-api/build.sh
             image: ecs.ContainerImage.fromRegistry(`${props?.env?.account}.dkr.ecr.${props?.env?.region}.amazonaws.com/gpu-api:latest`),
-            gpuCount: 1,
+            // gpuCount: 1,
             cpu: 2048,
             memoryReservationMiB: 2048
         });
