@@ -19,9 +19,8 @@
 # MAC
 **/.DS_Store
 
-# Lambda layer
-**/layers
-**/temp
+# bmz
+20*
 
 # CDK
 **/node_modules
