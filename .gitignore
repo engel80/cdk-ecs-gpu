@@ -21,6 +21,7 @@
 
 # bmz
 20*
+gpu-api-bzt.yaml
 
 # CDK
 **/node_modules

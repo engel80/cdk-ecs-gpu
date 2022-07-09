@@ -12,4 +12,4 @@ scenarios:
   gpu-api:
     think-time: 0
     requests:
-    - https://alb-gpu-restapi-908045077.ap-northeast-2.elb.amazonaws.com/gputest
+    - <url>
