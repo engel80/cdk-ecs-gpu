@@ -7,7 +7,8 @@ Table Of Contents
 3. Deploy IAM Role stack
 4. Deploy ECS Service stack
 5. Scaling Test
-6. Execute a command using ECS Exec
+6. GPU usage test
+7. Execute a command using ECS Exec
 
 ## Prerequisite
 
@@ -112,12 +113,43 @@ If the ECS cluster was re-created, you HAVE to deploy after cdk.context.json fil
 ### Step 5: Scaling Test
 
 ```bash
-aws ecs update-service --cluster gpu-ec2-local --service restapi --desired-count 5
-
-aws ecs update-service --cluster gpu-ec2-local --service restapi2 --desired-count 13
+aws ecs update-service --cluster gpu-ec2-local --service gpu-restapi --desired-count 9
 ```
 
-### Step 6: Execute a command using ECS Exec
+### Step 6: GPU usage test
+
+```bash
+bzt gpu-api-bzt.yaml
+```
+
+```bash
+watch nvidia-smi
+```
+
+```bash
+Sat Jul  9 03:41:01 2022
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 470.57.02    Driver Version: 470.57.02    CUDA Version: 11.4     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  Tesla T4            Off  | 00000000:00:1E.0 Off |                    0 |
+| N/A   53C    P0    29W /  70W |   1040MiB / 15109MiB |     39%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|    0   N/A  N/A     13118      C   ...user/miniconda/bin/python     1037MiB |
++-----------------------------------------------------------------------------+
+```
+
+### Step 7: Execute a command using ECS Exec
 
 Install the Session Manager plugin for the AWS CLI:
 
@@ -137,7 +169,7 @@ aws ecs list-tasks --cluster gpu-ec2-local --service-name restapi
 ```
 
 ```bash
-TASK_ID=$(aws ecs list-tasks --cluster gpu-ec2-local --service-name restapi | jq '.taskArns[0]' | cut -d '/' -f3 | cut -d '"' -f1)
+TASK_ID=$(aws ecs list-tasks --cluster gpu-ec2-local --service-name gpu-restapi | jq '.taskArns[0]' | cut -d '/' -f3 | cut -d '"' -f1)
 
 aws ecs execute-command --cluster gpu-ec2-local --task $TASK_ID --container restapi-container  --interactive --command "/bin/sh"
 ```
@@ -210,6 +242,8 @@ Load average: 0.00 0.02 0.00 4/301 75
 ## Reference
 
 ### Docs
+
+* [Working with GPUs on Amazon ECS](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-gpu.html)
 
 * [Networking > networkmode > bridge](https://docs.aws.amazon.com/AmazonECS/latest/bestpracticesguide/networking-networkmode-bridge.html)
 

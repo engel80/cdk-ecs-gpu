@@ -12,6 +12,7 @@ import { INSTANCE_TYPE } from '../lib/cluster-config';
 import { SSM_PREFIX } from '../../ssm-prefix';
 
 /**
+ * GPU optimized API:
  * aws ssm get-parameters --names /aws/service/ecs/optimized-ami/amazon-linux-2/gpu/recommended
  * https://ap-northeast-2.console.aws.amazon.com/systems-manager/parameters/aws/service/ecs/optimized-ami/amazon-linux-2/gpu/recommended/image_id/description?region=ap-northeast-2#
  */
@@ -53,6 +54,8 @@ export class EcsEc2ClusterStack extends Stack {
             ]
         });
         autoScalingGroup.role.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'));
+        // To test on EC2 by connect with SSM, 'ecr:BatchGetImage' permission is required in EC2 role   
+        autoScalingGroup.role.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEC2ContainerRegistryReadOnly'));
 
         const capacityProvider = new ecs.AsgCapacityProvider(this, 'asg-capacityprovider', {
             capacityProviderName: `${cluster.clusterName}-AsgCapacityProvider`,

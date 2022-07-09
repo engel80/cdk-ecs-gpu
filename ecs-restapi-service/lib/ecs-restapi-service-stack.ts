@@ -1,6 +1,6 @@
 import { Construct } from 'constructs';
 import * as cdk from 'aws-cdk-lib';
-import { Stack, StackProps, CfnOutput, Duration } from 'aws-cdk-lib';
+import { Stack, StackProps, CfnOutput, Duration, Tags } from 'aws-cdk-lib';
 import * as path from 'path';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
@@ -31,7 +31,7 @@ export class EcsRestAPIServiceStack extends Stack {
             vpc,
             securityGroups: [ecsSecurityGroup]
         });
-        const serviceName = 'restapi'
+        const serviceName = 'gpu-restapi'
         const containerName = `${serviceName}-container`
         const applicationPort = 8080;
 
@@ -45,14 +45,16 @@ export class EcsRestAPIServiceStack extends Stack {
             executionRole: iam.Role.fromRoleArn(this, 'task-execution-role', cdk.Lazy.string({ produce: () => executionRoleArn })),
             taskRole: iam.Role.fromRoleArn(this, 'task-role', cdk.Lazy.string({ produce: () => taskRoleArn }))
         });
+        
         const container = taskDefinition.addContainer('container-restapi', {
             containerName,
-            image: ecs.ContainerImage.fromAsset(path.join(__dirname, "../../", "cpu-api")),
+            // image: ecs.ContainerImage.fromAsset(path.join(__dirname, "../../", "cpu-api")),
             // image: ecs.ContainerImage.fromAsset(path.join(__dirname, "../../", "gpu-api")),
-            // or build with app/build.sh
-            // image: ecs.ContainerImage.fromRegistry("<account-id>.dkr.ecr.<region>.amazonaws.com/sample-rest-api:latest"),
-            cpu: 1024,
-            memoryReservationMiB: 1024
+            // or build with gpu-api/build.sh
+            image: ecs.ContainerImage.fromRegistry(`${props?.env?.account}.dkr.ecr.${props?.env?.region}.amazonaws.com/ecs-gpu-api:latest`),
+            gpuCount: 1,
+            // cpu: 1024,
+            memoryReservationMiB: 2048
         });
         container.addPortMappings({ containerPort: applicationPort, hostPort: 0 });
 
@@ -70,15 +72,14 @@ export class EcsRestAPIServiceStack extends Stack {
         const scaling = ecsService.autoScaleTaskCount({
             minCapacity: 2,
             maxCapacity: 20,
-        });
-        scaling.scaleOnCpuUtilization('cpuscaling', {
+        }).scaleOnCpuUtilization('cpuscaling', {
             targetUtilizationPercent: 50,
             scaleOutCooldown: Duration.seconds(60),
             scaleInCooldown: Duration.seconds(120)
         });
         const logGroup = new logs.LogGroup(this, 'loggroup', {
-            removalPolicy: cdk.RemovalPolicy.DESTROY,
             logGroupName: serviceName,
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
             retention: logs.RetentionDays.TWO_WEEKS,
         });
 
@@ -87,9 +88,13 @@ export class EcsRestAPIServiceStack extends Stack {
             securityGroupName: albSecurityGroupName,
             vpc,
             allowAllOutbound: true,
-            description: `ALB security group, service: ${serviceName}`
+            description: `ALB security group for ${serviceName} Service`
         });
         ecsSecurityGroup.addIngressRule(albSecurityGroup, ec2.Port.tcp(0), 'Allows all from ALB');
+        albSecurityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), 'Allow any')
+
+        Tags.of(ecsSecurityGroup).add('Stage', stage);
+        Tags.of(ecsSecurityGroup).add('Name', albSecurityGroupName);
 
         const alb = new ApplicationLoadBalancer(this, 'alb', {
             securityGroup: albSecurityGroup,
@@ -103,9 +108,7 @@ export class EcsRestAPIServiceStack extends Stack {
         const listener = alb.addListener('https-listener', {
             protocol: ApplicationProtocol.HTTP,
             open: false,
-        });
-
-        listener.addTargets('ec2-service-target', {
+        }).addTargets('ec2-service-target', {
             targetGroupName: `tg-${serviceName}`,
             port: applicationPort,
             protocol: ApplicationProtocol.HTTP,
@@ -124,11 +127,10 @@ export class EcsRestAPIServiceStack extends Stack {
         });
         (ecsService.node.defaultChild as ecs.CfnService).healthCheckGracePeriodSeconds = undefined;
 
-        new CfnOutput(this, 'VPC', { value: vpc.vpcId });
-        new CfnOutput(this, 'Cluster', { value: cluster.clusterName });
         new CfnOutput(this, 'Service', { value: ecsService.serviceArn });
         new CfnOutput(this, 'TaskDefinition', { value: taskDefinition.family });
         new CfnOutput(this, 'LogGroup', { value: logGroup.logGroupName });
         new CfnOutput(this, 'ALB', { value: alb.loadBalancerDnsName });
+        new CfnOutput(this, 'TestURL', { value: `https://${alb.loadBalancerDnsName}/gputest` });
     }
 }

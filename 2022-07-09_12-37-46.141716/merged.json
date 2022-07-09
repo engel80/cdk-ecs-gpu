@@ -1,0 +1,18 @@
+{
+ "execution": [
+  {
+   "concurrency": 2,
+   "ramp-up": "120s",
+   "hold-for": "30m",
+   "scenario": "gpu-api"
+  }
+ ],
+ "scenarios": {
+  "gpu-api": {
+   "think-time": 0,
+   "requests": [
+    "http://alb-gpu-restapi-908045077.ap-northeast-2.elb.amazonaws.com/gputest"
+   ]
+  }
+ }
+}
