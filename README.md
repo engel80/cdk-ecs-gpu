@@ -1,4 +1,4 @@
-# Sample project for ECS GPU
+# Sample project for ECS GPU Inference API
 
 Table Of Contents
 
@@ -10,7 +10,7 @@ Table Of Contents
 6. GPU usage test
 7. Execute a command using ECS Exec
 
-## Prerequisite
+## Prerequisites
 
 ```bash
 npm install -g aws-cdk@2.25.0
@@ -32,9 +32,11 @@ Use the `cdk` command-line toolkit to interact with your project:
 | Stack                         | Time    |
 |-------------------------------|---------|
 | VPC                           | 3m      |
-| ECS EC2 cluster               | 5m      | 280.55s
+| ECS EC2 cluster               | 5m      |
 | IAM roles                     | 1m      |
-| ECS Service and ALB           | 3m      |
+| ECS Service and ALB           | 10m     |
+
+Docker image size: 3.2GB
 
 ## Steps
 
