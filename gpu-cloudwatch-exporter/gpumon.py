@@ -38,7 +38,7 @@ INSTANCE_ID = urllib.request.urlopen(BASE_URL + 'instance-id').read()
 IMAGE_ID = urllib.request.urlopen(BASE_URL + 'ami-id').read()
 INSTANCE_TYPE = urllib.request.urlopen(BASE_URL + 'instance-type').read()
 INSTANCE_AZ = urllib.request.urlopen(BASE_URL + 'placement/availability-zone').read()
-# EC2_REGION = INSTANCE_AZ[:-1]
+### EC2_REGION = INSTANCE_AZ[:-1]
 
 TIMESTAMP = datetime.now().strftime('%Y-%m-%dT%H')
 TMP_FILE = '/tmp/GPU_TEMP'
@@ -53,12 +53,12 @@ PUSH_TO_CW = True
 
 def getPowerDraw(handle):
     try:
-        powDraw = nvmlDeviceGetPowerUsage(handle) / 1000.0
-        powDrawStr = '%.2f' % powDraw
+        pow_draw = nvmlDeviceGetPowerUsage(handle) / 1000.0
+        pow_draw_str = '%.2f' % pow_draw
     except NVMLError as err:
-        powDrawStr = handleError(err)
+        pow_draw_str = handleError(err)
         PUSH_TO_CW = False
-    return powDrawStr
+    return pow_draw_str
 
 def getTemp(handle):
     try:
@@ -80,10 +80,10 @@ def getUtilization(handle):
         PUSH_TO_CW = False
     return util, gpu_util, mem_util
 
-def logResults(i, util, gpu_util, mem_util, powDrawStr, temp):
+def logResults(i, util, gpu_util, mem_util, pow_draw_str, temp):
     try:
         gpu_logs = open(TMP_FILE_SAVED, 'a+')
-        writeString = str(i) + ',' + gpu_util + ',' + mem_util + ',' + powDrawStr + ',' + temp + '\n'
+        writeString = str(i) + ',' + gpu_util + ',' + mem_util + ',' + pow_draw_str + ',' + temp + '\n'
         gpu_logs.write(writeString)
     except:
         print("Error writing to file ", gpu_logs)
@@ -129,7 +129,7 @@ def logResults(i, util, gpu_util, mem_util, powDrawStr, temp):
                     'Dimensions': MY_DIMENSIONS,
                     'Unit': 'None',
                     'StorageResolution': store_reso,
-                    'Value': float(powDrawStr)
+                    'Value': float(pow_draw_str)
                 },
                 {
                     'MetricName': 'Temperature (C)',
@@ -154,10 +154,10 @@ def main():
             for i in range(deviceCount):
                 handle = nvmlDeviceGetHandleByIndex(i)
 
-                powDrawStr = getPowerDraw(handle)
+                pow_draw_str = getPowerDraw(handle)
                 temp = getTemp(handle)
                 util, gpu_util, mem_util = getUtilization(handle)
-                logResults(i, util, gpu_util, mem_util, powDrawStr, temp)
+                logResults(i, util, gpu_util, mem_util, pow_draw_str, temp)
 
             sleep(sleep_interval)
 
