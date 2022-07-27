@@ -1,8 +1,14 @@
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+REGION=$(aws configure get default.region)
+
+echo "ACCOUNT_ID: $ACCOUNT_ID"
+echo "REGION: $REGION"
+sleep 1
 
 docker build -t gpu-cloudwatch-exporter .
 
-docker tag gpu-cloudwatch-exporter:latest 681747700094.dkr.ecr.ap-northeast-2.amazonaws.com/gpu-cloudwatch-exporter:latest
+docker tag gpu-cloudwatch-exporter:latest ${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/gpu-cloudwatch-exporter:latest
 
-aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 681747700094.dkr.ecr.ap-northeast-2.amazonaws.com
+aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com
 
-docker push 681747700094.dkr.ecr.ap-northeast-2.amazonaws.com/gpu-cloudwatch-exporter:latest
+docker push ${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/gpu-cloudwatch-exporter:latest
