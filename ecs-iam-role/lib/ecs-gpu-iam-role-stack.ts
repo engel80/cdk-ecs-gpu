@@ -58,12 +58,25 @@ export class EcsGpuIamRoleStack extends Stack {
       }
     });
 
+    const cloudWatchExporterTaskRole = new iam.Role(this, 'cloudWatch-exporter-task-role', {
+      roleName: 'ECSGPUCloudWatchExporterTaskRole',
+      assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName(
+          'CloudWatchFullAccess',
+        )
+      ]
+    });
+
     const taskExecRoleParam = new ssm.StringParameter(this, 'ssm-task-execution-role', { parameterName: `${SSM_PREFIX}/gpu-task-execution-role-arn`, stringValue: taskExecutionRole.roleArn });
     const defaultTaskRoleParam = new ssm.StringParameter(this, 'ssm-default-task-role', { parameterName: `${SSM_PREFIX}/gpu-default-task-role-arn`, stringValue: defaultTaskRole.roleArn });
+    const cloudWatchExporterTaskRoleParam = new ssm.StringParameter(this, 'ssm-cloudWatch-exporter-task-role', { parameterName: `${SSM_PREFIX}/gpu-cloudWatch-exporter-task-role-arn`, stringValue: cloudWatchExporterTaskRole.roleArn });
 
     new CfnOutput(this, 'SSMTaskExecRoleParam', { value: taskExecRoleParam.parameterName });
     new CfnOutput(this, 'SSMTaskExecRoleParamValue', { value: taskExecRoleParam.stringValue });
     new CfnOutput(this, 'SSMDefaultTaskRoleParam', { value: defaultTaskRoleParam.parameterName });
     new CfnOutput(this, 'SSMDefaultTaskRoleParamValue', { value: defaultTaskRoleParam.stringValue });
+    new CfnOutput(this, 'SSMCloudWatchExporterTaskRoleParam', { value: cloudWatchExporterTaskRoleParam.parameterName });
+    new CfnOutput(this, 'SSMCloudWatchExporterTaskRoleParamValue', { value: cloudWatchExporterTaskRoleParam.stringValue });
   }
 }

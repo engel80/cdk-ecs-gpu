@@ -17,5 +17,4 @@ echo "destroy vpc"
 cd ../vpc
 cdk destroy
 
-
 find . -name "cdk.context.json" -exec rm -f {} \;
