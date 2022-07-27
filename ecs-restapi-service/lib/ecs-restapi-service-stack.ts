@@ -1,14 +1,12 @@
 import { Construct } from 'constructs';
 import * as cdk from 'aws-cdk-lib';
 import { Stack, StackProps, CfnOutput, Duration, Tags } from 'aws-cdk-lib';
-import * as path from 'path';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
-import { DockerImageAsset } from 'aws-cdk-lib/aws-ecr-assets';
-import { ApplicationLoadBalancer, ApplicationProtocol, SslPolicy } from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import { ApplicationLoadBalancer, ApplicationProtocol } from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 
 import { CLUSTER_NAME } from '../../ecs-ec2-cluster/lib/cluster-config';
 import { SSM_PREFIX } from '../../ssm-prefix';
@@ -52,7 +50,7 @@ export class EcsRestAPIServiceStack extends Stack {
             // image: ecs.ContainerImage.fromAsset(path.join(__dirname, "../../", "gpu-api")),
             // or build with gpu-api/build.sh
             image: ecs.ContainerImage.fromRegistry(`${props?.env?.account}.dkr.ecr.${props?.env?.region}.amazonaws.com/gpu-api:latest`),
-            // gpuCount: 1,
+            gpuCount: 1,
             cpu: 2048,
             memoryReservationMiB: 2048
         });

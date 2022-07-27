@@ -7,7 +7,6 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
-import { DockerImageAsset } from 'aws-cdk-lib/aws-ecr-assets';
 
 import { CLUSTER_NAME } from '../../ecs-ec2-cluster/lib/cluster-config';
 import { SSM_PREFIX } from '../../ssm-prefix';
@@ -32,9 +31,7 @@ export class GpuCloudwatchExporterServiceStack extends Stack {
         });
         const serviceName = 'gpu-metric-exporter'
         const containerName = `${serviceName}-container`
-        // const applicationPort = 8080;
 
-        const capacityProviderName = ssm.StringParameter.valueFromLookup(this, `${SSM_PREFIX}/cluster-capacityprovider-name`);
         const executionRoleArn = ssm.StringParameter.valueFromLookup(this, `${SSM_PREFIX}/gpu-task-execution-role-arn`);
         const taskRoleArn = ssm.StringParameter.valueFromLookup(this, `${SSM_PREFIX}/gpu-cloudWatch-exporter-task-role-arn`);
 
@@ -59,18 +56,13 @@ export class GpuCloudwatchExporterServiceStack extends Stack {
             memoryReservationMiB: 128,
             logging: new ecs.AwsLogDriver({ logGroup, streamPrefix: containerName, mode: ecs.AwsLogDriverMode.NON_BLOCKING })
         });
-        // container.addPortMappings({ containerPort: applicationPort, hostPort: 0 });
 
         const ecsService = new ecs.Ec2Service(this, 'ec2-service', {
             cluster,
             serviceName,
             daemon: true,
             taskDefinition,
-            enableExecuteCommand: true,
-            // capacityProviderStrategies: [{
-            //     capacityProvider: capacityProviderName,
-            //     weight: 1
-            // }]
+            enableExecuteCommand: true
         });
         Tags.of(ecsSecurityGroup).add('Stage', stage);    
 
