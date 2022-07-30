@@ -67,7 +67,7 @@ export class EcsRestAPIServiceStack extends Stack {
             }]
         });
 
-        const scaling = ecsService.autoScaleTaskCount({
+        ecsService.autoScaleTaskCount({
             minCapacity: 2,
             maxCapacity: 20,
         }).scaleOnCpuUtilization('cpuscaling', {
@@ -103,7 +103,7 @@ export class EcsRestAPIServiceStack extends Stack {
             idleTimeout: cdk.Duration.seconds(30),
         });
 
-        const listener = alb.addListener('https-listener', {
+        alb.addListener('https-listener', {
             protocol: ApplicationProtocol.HTTP,
             open: false,
         }).addTargets('ec2-service-target', {

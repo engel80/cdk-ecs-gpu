@@ -4,11 +4,9 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as autoscaling from 'aws-cdk-lib/aws-autoscaling';
-import { CfnLaunchConfiguration } from 'aws-cdk-lib/aws-autoscaling';
 import { Construct } from 'constructs';
 
-import { CLUSTER_NAME } from '../lib/cluster-config';
-import { INSTANCE_TYPE } from '../lib/cluster-config';
+import { CLUSTER_NAME, INSTANCE_TYPE } from '../lib/cluster-config';
 import { SSM_PREFIX } from '../../ssm-prefix';
 
 /**
@@ -63,7 +61,7 @@ export class EcsEc2ClusterStack extends Stack {
         });
         cluster.addAsgCapacityProvider(capacityProvider);
 
-        const cfnLaunchConfig = autoScalingGroup.node.findChild('LaunchConfig') as CfnLaunchConfiguration;
+        const cfnLaunchConfig = autoScalingGroup.node.findChild('LaunchConfig');
         const ecsEc2SgToken = Token.asAny(Fn.select(0, cfnLaunchConfig.securityGroups as Array<any>));
 
         new CfnOutput(this, 'VPC', { value: vpc.vpcId });
